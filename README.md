@@ -6,6 +6,7 @@
 翻译： [Yuanhao](https://www.yuanhao.site)
 
 欢迎关注我的公众号【多头注意力】
+
 ![](assets/images/qr.jpg)
 
 This website was built in Jekyll based on [Just the Class](https://github.com/kevinlin1/just-the-class/),
