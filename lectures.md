@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Lectures
+title: 讲义
 nav_order: 3
 has_children: true
 ---

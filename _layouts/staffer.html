@@ -18,6 +18,9 @@
     {% if page.office-hours %}
     <p class="staffer-meta">Office Hours: {{ page.office-hours | markdownify | strip_html }}</p>
     {% endif %}
+    {% if page.mp %}
+    <p class="staffer-meta">公众号: {{ page.mp | markdownify | strip_html }}</p>
+    {% endif %}
     {{ content }}
   </div>
 </div>

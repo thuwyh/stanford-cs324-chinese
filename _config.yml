@@ -13,10 +13,10 @@
 # you will see them accessed via {{ site.title }}, {{ site.github_repo }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: CS324
-tagline: CS324 - Large Language Models
-description: Understanding and developing large language models.
-author: Percy Liang
+title: CS324中文版
+tagline: CS324 - 大语言模型
+description: 理解和开发大语言模型
+author: 多头注意力
 exclude: ["Gemfile", "Gemfile.lock", "LICENSE", "README.md"]
 markdown: kramdown
 
@@ -30,9 +30,10 @@ permalink: pretty
 # Collections for website data
 collections:
   staffers:
-  modules:
-  schedules:
-  announcements:
+  translators:
+  # modules:
+  # schedules:
+  # announcements:
   lectures:
   projects:
 
@@ -41,6 +42,12 @@ defaults:
   - scope:
       path: ''
       type: staffers
+    values:
+      layout: staffer
+      subpath: '/assets/images/'
+  - scope:
+      path: ''
+      type: translators
     values:
       layout: staffer
       subpath: '/assets/images/'

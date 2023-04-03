@@ -1,7 +1,7 @@
 ---
 layout: page
-parent: Lectures
-title: Introduction
+parent: 讲义
+title: 导论
 nav_order: 1
 usemathjax: true
 ---
@@ -11,26 +11,27 @@ $$
 \newcommand{\generate}[1]{\stackrel{#1}{\rightsquigarrow}}
 $$
 
-Welcome to CS324!  This is a new course on understanding and developing **large language models**.
+欢迎来到CS324！这是一门关于理解和开发**大规模语言模型**的新课程。
 
-1. [What is a language model?](#what-is-a-language-model)
-1. [A brief history](#a-brief-history)
-1. [Why does this course exist?](#why-does-this-course-exist)
-1. [Structure of this course](#structure-of-this-course)
 
-## What is a language model?
 
-The classic definition of a language model (LM) is a **probability distribution
-over sequences of tokens**.
-Suppose we have a **vocabulary** $$\sV$$ of a set of tokens.
-A language model $$p$$ assigns each sequence of tokens $$x_1, \dots, x_L \in \sV$$
-a probability (a number between 0 and 1):
+1. [什么是语言模型？](#什么是语言模型？)
+1. [语言模型简史](#语言模型简史)
+1. [为什么会有这门课程？](#为什么会有这门课程)
+1. [这门课程的结构](#这门课程的结构)
+
+## 什么是语言模型？
+
+语言模型（LM）的经典定义是对token序列的概率分布。
+假设我们有一个包含一组token的**词汇表** $$\sV$$。
+
+一个语言模型$$p$$为每个token序列$$x_1, \dots, x_L \in \sV$$分配概率（介于0和1之间）。
 
 $$p(x_1, \dots, x_L).$$
 
-The probability intuitively tells us how "good" a sequence of tokens is.
-For example, if the vocabulary is $$\sV = \{ \nl{ate}, \nl{ball}, \nl{cheese},
-\nl{mouse}, \nl{the} \}$$, the language model might assign
+
+概率直观地告诉我们一个记号序列的“好坏”程度。
+例如，如果词汇表是$$\sV = \{ \nl{ate}, \nl{ball}, \nl{cheese}, \nl{mouse}, \nl{the} \}$$，语言模型可能会分配以下概率值：
 ([demo](http://crfm-models.stanford.edu/static/index.html?prompt=%24%7Bprompt%7D&settings=echo_prompt%3A%20true%0Amax_tokens%3A%200&environments=prompt%3A%20%5Bthe%20mouse%20ate%20the%20cheese%2C%20the%20cheese%20ate%20the%20mouse%2C%20mouse%20the%20the%20cheese%20ate%5D)):
 
 $$p(\nl{the}, \nl{mouse}, \nl{ate}, \nl{the}, \nl{cheese}) = 0.02,$$
@@ -39,38 +40,37 @@ $$p(\nl{the}, \nl{cheese}, \nl{ate}, \nl{the}, \nl{mouse}) = 0.01,$$
 
 $$p(\nl{mouse}, \nl{the}, \nl{the}, \nl{cheese}, \nl{ate}) = 0.0001.$$
 
-Mathematically, a language model is a very simple and beautiful object.
-But the simplicity is deceiving: the ability to assign (meaningful)
-probabilities to all sequences requires extraordinary (but *implicit*) linguistic
-abilities and world knowledge.
 
-For example, the LM should assign $$\nl{mouse the the cheese ate}$$ a very low probability
-implicitly because it's ungrammatical (**syntactic knowledge**).
-The LM should assign $$\nl{the mouse ate the cheese}$$ higher probability than $$\nl{the cheese ate the mouse}$$
-implicitly because of **world knowledge**: both sentences are the same
-syntactically, but they differ in semantic plausibility.
+从数学上讲，语言模型是一个非常简单而优美的对象。
+但这种简单性是具有欺骗性的：能够为所有序列分配（有意义的）概率需要非凡的（但是*隐含的*）语言能力和世界知识。
 
-**Generation**.
-As defined, a language model $$p$$ takes a sequence and returns a probability to assess its goodness.
-We can also generate a sequence given a language model.
-The purest way to do this is to sample a sequence $$x_{1:L}$$ from the
-language model $$p$$ with probability equal to $$p(x_{1:L})$$, denoted:
+例如，语言模型应该隐含地分配非常低的概率给$$\nl{mouse the the cheese ate}$$ ，因为这是不符合语法的（**语法知识**）。
+语言模型应该隐含地为$$\nl{the mouse ate the cheese}$$ 分配比$$\nl{the cheese ate the mouse}$$ 更高的概率，因为它涉及到**世界知识**：两个句子在句法上相同，但在语义上的可信度不同。
+
+
+
+**生成**。
+如上所述，语言模型$$p$$对一段序列进行评估，并返回一个概率值来评估它的好坏。
+我们也可以根据语言模型生成一个序列。
+最纯粹的方法是从语言模型$$p$$中抽样生成一个序列$$x_{1:L}$$，其概率等于$$p(x_{1:L})$$，表示为：
 
 $$x_{1:L} \sim p.$$
 
-How to do this computationally efficiently depends on the form of the language model $$p$$.
-In practice, we do not generally sample directly from a language model both
-because of limitations of real language models
-and because we sometimes wish to obtain not an "average" sequence but
-something closer to the "best" sequence.
 
-### Autoregressive language models
+如何进行高效的计算取决于语言模型$$p$$的形式。
+在实践中，我们通常不直接从语言模型中进行抽样，
+这既是由于现实语言模型的限制，
+也是因为我们有时希望获得的不是“平均”序列，
+而是更接近于“最优”序列的生成结果。
 
-A common way to write the joint distribution $$p(x_{1:L})$$ of a sequence $$x_{1:L}$$ is using the **chain rule of probability**:
+### 自回归语言模型
+
+
+一种常用方法是使用**概率连乘法则**来表示序列$$x_{1:L}$$的联合分布$$p(x_{1:L})$$:
 
 $$p(x_{1:L}) = p(x_1) p(x_2 \mid x_1) p(x_3 \mid x_1, x_2) \cdots p(x_L \mid x_{1:L-1}) = \prod_{i=1}^L p(x_i \mid x_{1:i-1}).$$
 
-For example
+例如
 ([demo](http://crfm-models.stanford.edu/static/index.html?prompt=the%20mouse%20ate%20the%20cheese&settings=echo_prompt%3A%20true%0Amax_tokens%3A%200%0Atop_k_per_token%3A%2010&environments=)):
 
 $$
@@ -84,34 +84,31 @@ p(\nl{the}, \nl{mouse}, \nl{ate}, \nl{the}, \nl{cheese}) = \,
 \end{align*}
 $$
 
-In particular, $$p(x_i \mid x_{1:i-1})$$ is a **conditional probability distribution**
-of the next token $$x_i$$ given the previous tokens $$x_{1:i-1}$$.
+特别地，$$p(x_i \mid x_{1:i-1})$$是给定前面token $$x_{1:i-1}$$之后，下一个token $$x_i$$的**条件概率分布**。
 
-Of course, any joint probability distribution can be written this way mathematically,
-but an **autoregressive language model** is one where each conditional
-distribution $$p(x_i \mid x_{1:i-1})$$ can be computed efficiently (e.g.,
-using a feedforward neural network).
+当然，任何联合概率分布都可以用这种数学方式来表示，
+但**自回归语言模型**是其中每个条件分布$$p(x_i \mid x_{1:i-1})$$都可以高效地计算出来的（例如，使用前馈神经网络）。
 
-**Generation**.  Now to generate an entire sequence $$x_{1:L}$$ from an
-autoregressive language model $$p$$, we sample one token at a time given
-the tokens generated so far:
+**生成**。 现在，要从自回归语言模型$$p$$中生成整个序列$$x_{1:L}$$，
+我们需要以前面已生成的token为条件逐个采样，生成token：
 
 $$
 \text{for } i = 1, \dots, L: \\
 \hspace{1in} x_i \sim p(x_i \mid x_{1:i-1})^{1/T},
 $$
 
-where $$T \ge 0$$ is a **temperature** parameter that controls how much
-randomness we want from the language model:
 
-- $$T = 0$$: deterministically choose the most probable token $$x_i$$ at each position $$i$$
-- $$T = 1$$: sample "normally" from the pure language model
-- $$T = \infty$$: sample from a uniform distribution over the entire vocabulary $$\sV$$
 
-However, if we just raise the probabilities to the power $$1/T$$, the probability distribution may not sum to 1.
-We can fix this by re-normalizing the distribution.
-We call the normalized version $$p_T(x_i \mid x_{1:i-1}) \propto p(x_i \mid x_{1:i-1})^{1/T}$$
-the **annealed** conditional probability distribution.  For example:
+其中$$T\ge 0$$是一个**温度**参数，用于控制我们希望从语言模型中获得多少随机性：
+
+
+- 当$$T=0$$时，每个位置$$i$$都会以确定性的方式选择最有可能的token $$x_i$$
+- 当$$T=1$$时，从语言模型中正常地进行采样
+- 当$$T=\infty$$时，从整个词汇表$$\sV$$的均匀分布中进行采样
+  
+但是，仅仅将概率提高到$$1/T$$次幂可能导致概率分布不等于1。
+我们可以通过重新规范化分布来解决这个问题。
+我们将归一化版本称为$$p_T(x_i \mid x_{1:i-1}) \propto p(x_i \mid x_{1:i-1})^{1/T}$$的**退火**条件概率分布。例如：
 
 $$p(\nl{cheese}) = 0.4, \quad\quad\quad p(\nl{mouse}) = 0.6$$
 
@@ -121,203 +118,166 @@ $$p_{T=0.2}(\nl{cheese}) = 0.12, \quad\quad\quad p_{T=0.2}(\nl{mouse}) = 0.88$$
 
 $$p_{T=0}(\nl{cheese}) = 0, \quad\quad\quad p_{T=0}(\nl{mouse}) = 1$$
 
-*Aside*: Annealing is a reference to metallurgy, where hot materials are cooled gradually,
-and shows up in sampling and optimization algorithms such as simulated annealing.
 
-*Technical note*: sampling iteratively with a temperature $$T$$ parameter applied
-to each conditional distribution $$p(x_i \mid x_{1:i-1})^{1/T}$$ is not
-equivalent (except when $$T = 1$$) to sampling from the annealed distribution over length $$L$$ sequences.
+*注*：退火中的“退火”是指冶金学中，热的材料逐渐冷却，这种方法常常在采样和优化算法中出现，比如模拟退火算法。
 
-**Conditional generation**.
-More generally, we can perform conditional generation by specifying some
-prefix sequence $$x_{1:i}$$ (called a **prompt**)
-and sampling the rest $$x_{i+1:L}$$ (called the **completion**).
-For example, generating with $$T=0$$ produces
+*技术细节*：分别对每个条件分布$$p(x_i \mid x_{1:i-1})^{1/T}$$采样不等价于从长度为$$L$$的已退火分布中采样（除非$$T=1$$）。
+
+**条件生成**。
+更一般地，我们可以通过指定一些前缀序列$$x_{1:i}$$（称为**提示，prompt**）并对其余的$$x_{i+1:L}$$（称为**补全，completion**）进行采样来进行条件生成。
+例如, 当$$T=0$$时生成的结果如下:
+
 ([demo](http://crfm-models.stanford.edu/static/index.html?prompt=the%20mouse%20ate&settings=temperature%3A%200%0Amax_tokens%3A%202%0Atop_k_per_token%3A%2010%0Anum_completions%3A%2010&environments=)):
 
 $$\underbrace{\nl{the}, \nl{mouse}, \nl{ate}}_\text{prompt} \generate{T=0} \underbrace{\nl{the}, \nl{cheese}}_\text{completion}.$$
 
-If we change the temperature to $$T = 1$$, we can get more variety
+如果将温度改为$$T=1$$，我们可以得到更多的变化：
 ([demo](http://crfm-models.stanford.edu/static/index.html?prompt=the%20mouse%20ate&settings=temperature%3A%201%0Amax_tokens%3A%202%0Atop_k_per_token%3A%2010%0Anum_completions%3A%2010&environments=)),
-for example, $$\nl{its house}$$ and $$\nl{my homework}$$.
+例如, $$\nl{its house}$$ and $$\nl{my homework}$$.
 
-As we'll see shortly, conditional generation unlocks the ability for language
-models to solve a variety of tasks by simply changing the prompt.
+在后面，很快我们将看到，通过简单地更改提示，条件生成为语言模型解决各种任务打开了大门。
 
-### Summary
+### 总结
 
-- A language model is a probability distribution $$p$$ over sequences $$x_{1:L}$$.
-- Intuitively, a good language model should have linguistic capabilities and world knowledge.
-- An autoregressive language model allows for efficient generation of a completion $$x_{i+1:L}$$ given a prompt $$x_{1:i}$$.
-- The temperature can be used to control the amount of variability in generation.
+- 语言模型是一个对序列$$x_{1:L}$$的概率分布$$p$$。
+- 直观地，一个好的语言模型应该具有语言能力和世界知识。
+- 给定提示$$x_{1:i}$$，自回归语言模型可以有效的方式生成完成$$x_{i+1:L}$$。
+- 温度可以用来控制生成过程中的变化程度。
+  
+## 语言模型简史
 
-## A brief history
+### 信息论，英语熵，n-gram模型
 
-### Information theory, entropy of English, n-gram models
 
-**Information theory**.  Language models date back to Claude Shannon, who
-founded information theory in 1948 with his seminal paper, [A Mathematical
-Theory of Communication](https://dl.acm.org/doi/pdf/10.1145/584091.584093).
-In this paper, he introduced the **entropy** of a distribution as
+**信息论**。语言模型可以追溯到克劳德·香农（Claude Shannon），他在1948年发表了具有开创性的论文[《通信的数学理论》（A Mathematical Theory of Communication）](https://dl.acm.org/doi/pdf/10.1145/584091.584093)，创立了信息论。在这篇论文中，他将分布的**熵**作为一种度量信息量的方法引入。
 
 $$H(p) = \sum_x p(x) \log \frac{1}{p(x)}.$$
 
-The entropy measures the expected number of bits **any algorithm** needs
-to encode (compress) a sample $$x \sim p$$ into a bitstring:
+
+熵（Entropy）是指对于概率分布中的一个样本$$x \sim p$$，**任何算法**需要编码（压缩）它为一个比特串的平均比特数:
+
 
 $$\nl{the mouse ate the cheese} \Rightarrow 0001110101.$$
 
-- The lower the entropy, the more "structured" the sequence is, and the shorter the code length.
-- Intuitively, $$\log \frac{1}{p(x)}$$ is the length of the code used to represent an element $$x$$ that occurs with probability $$p(x)$$.
-- If $$p(x) = \frac{1}{8}$$, we should allocate $$\log_2(8) = 3$$ bits (equivalently, $$\log(8) = 2.08$$ nats).
+- 熵越低，序列的"结构化"程度越高，代码长度越短。
+- 直观地说，$$\log \frac{1}{p(x)}$$ 是用于表示出现概率为 $$p(x)$$ 的元素 $$x$$ 的代码长度。
+- 如果 $$p(x) = \frac{1}{8}$$，那么我们应该分配 $$\log_2(8) = 3$$ 位（等价于 $$\log(8) = 2.08$$ nats）。
+  
+*旁注*：实际达到香农极限并不简单（例如，LDPC代码），这是编码理论的话题。
 
-*Aside*: actually achieving the Shannon limit is non-trivial (e.g., LDPC codes) and is the topic of coding theory.
+**英语的熵**。Shannon特别感兴趣的是测量英语（以字母序列表示）的熵。这意味着我们想象存在一个“真实”的分布 $$p$$ （存在性是有问题的，但它仍然是一个有用的数学抽象），可以产生英语文本样本 $$x \sim p$$ 。
 
-**Entropy of English**.  Shannon was particularly interested in measuring the entropy of English,
-represented as a sequence of letters.
-This means we imagine that there is a "true" distribution $$p$$ out there (the
-existence of this is questionable, but it's still a useful mathematical
-abstraction)
-that can spout out samples of English text $$x \sim p$$.
+Shannon也定义了**交叉熵**：
 
-Shannon also defined **cross entropy**:
 
 $$H(p, q) = \sum_x p(x) \log \frac{1}{q(x)},$$
 
-which measures the expected number of bits (nats) needed to encode a sample $$x \sim
-p$$ using the compression scheme given by the model $$q$$ (representing $$x$$ with a code of length $$\frac{1}{q(x)}$$).
+这里介绍的是通过模型$q$给定的压缩方案对样本$$x\sim p$$进行编码所需的预期比特数（nats），其中$q(x)$表示用长度为$$\frac{1}{q(x)}$$的编码来表示$$x$$。
 
-**Estimating entropy via language modeling**.
-A crucial property is that the cross entropy $$H(p, q)$$ upper bounds the entropy $$H(p)$$,
+**通过语言建模估计熵**
+一个重要的属性是交叉熵 $$H(p, q)$$ 限制了熵 $$H(p)$$的上限。
 
 $$H(p, q) \ge H(p),$$
 
-which means that we can estimate $$H(p, q)$$ by constructing a (language) model $$q$$
-with only samples from the true data distribution $$p$$,
-whereas $$H(p)$$ is generally inaccessible if $$p$$ is English.
+这意味着，我们可以通过构建一个（语言）模型 $$q$$，并只使用来自真实数据分布 $$p$$ 的样本来估计 $$H(p, q)$$，而如果 $$p$$ 是英文，则通常无法获得 $$H(p)$$。
 
-So we can get better estimates of the entropy $$H(p)$$
-by constructing better models $$q$$, as measured by $$H(p, q)$$.
+为了更好地估计熵$$H(p)$$，我们可以构建更好的模型$$q$$，并通过$$H(p, q)$$进行测量。
 
-**Shannon game (human language model)**.
-Shannon first used n-gram models as $$q$$ in 1948,
-but in his 1951 paper [Prediction and Entropy of Printed English](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6773263),
-he introduced a clever scheme (known as the Shannon game) where $$q$$ was
-provided by a human:
+
+**Shannon游戏（人类语言模型）**
+
+1948年，Shannon首次将n-gram模型用作$$q$$，但在他1951年的论文[Prediction and Entropy of Printed English](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6773263)中，他引入了一个巧妙的方案（称为Shannon游戏），其中$$q$$由人类提供：
 
 $$\nl{the mouse ate my ho_}$$
 
-Humans aren't good at providing calibrated probabilities of arbitrary text, so
-in the Shannon game, the human language model would repeatedly try to guess the next letter,
-and one would record the number of guesses.
+人类不擅长提供任意文本的校准概率，因此在香农游戏中，人类语言模型会反复尝试猜测下一个字母，并记录猜测次数。
 
-### N-gram models for downstream applications
 
-Language models became first used in practical applications
-that required generation of text:
-- speech recognition in the 1970s (input: acoustic signal, output: text), and
-- machine translation in the 1990s (input: text in a source language, output: text in a target language).
+### 用于下游应用的N-gram模型
 
-**Noisy channel model**.
-The dominant paradigm for solving these tasks then was the **noisy channel model**.
-Taking speech recognition as an example:
-- We posit that there is some text sampled from some distribution $$p$$.
-- This text becomes realized to speech (acoustic signals).
-- Then given the speech, we wish to recover the (most likely) text.
-  This can be done via Bayes rule:
+语言模型最早被用于需要生成文本的实际应用场景：
+- 20世纪70年代的语音识别（输入：声学信号，输出：文本），
+- 20世纪90年代的机器翻译（输入：源语言文本，输出：目标语言文本）。
+
+**噪声信道模型**。
+解决这些任务的主要范式是**噪声信道模型**。
+以语音识别为例：
+- 我们假设存在一些从分布$$p$$中抽取的文本。
+- 这些文本被实现为语音（声学信号）。
+- 然后，鉴于语音，我们希望恢复（最有可能的）文本。
+  
+这可以通过贝叶斯定理完成：
 
 $$p(\text{text} \mid \text{speech}) \propto \underbrace{p(\text{text})}_\text{language model} \underbrace{p(\text{speech} \mid \text{text})}_\text{acoustic model}.$$
 
-Speech recognition and machine translation systems used n-gram language models
-over words (first introduced by Shannon, but for characters).
+语音识别和机器翻译系统使用n-gram语言模型，这些模型作用于单词上（最初由Shannon引入，但是针对的是字符）。
 
-**N-gram models**.
-In an **n-gram model**,
-the prediction of a token $$x_i$$ only depends on the last $$n-1$$ characters $$x_{i-(n-1):i-1}$$ rather than the full history:
+**N-gram 模型**。
+在**N-gram模型**中，
+对于一个token $$x_i$$ 的预测，只依赖于最后的$$n-1$$个字符$$x_{i-(n-1):i-1}$$，而不是整个历史记录：
 
 $$p(x_i \mid x_{1:i-1}) = p(x_i \mid x_{i-(n-1):i-1}).$$
 
-For example, a trigram ($$n=3$$) model would define:
+例如，一个三元模型（$$n=3$$）会定义：
 
 $$p(\nl{cheese} \mid \nl{the}, \nl{mouse}, \nl{ate}, \nl{the}) = p(\nl{cheese} \mid \nl{ate}, \nl{the}).$$
 
-These probabilities are computed based on the number of times various n-grams
-(e.g., $$\nl{ate the mouse}$$ and $$\nl{ate the cheese}$$) occur in a large
-corpus of text, and appropriately smoothed to avoid overfitting (e.g., Kneser-Ney smoothing).
+这些概率是基于在大量文本语料库中出现各种 n-grams（例如，$$\nl{ate the mouse}$$ 和 $$\nl{ate the cheese}$$）的次数计算的，并适当地平滑以避免过拟合（例如，Kneser-Ney平滑）。
 
-Fitting n-gram models to data is extremely **computationally cheap** and scalable.
-As a result, n-gram models were trained on massive amount of text.  For example, [Brants et al.
-(2007)](https://aclanthology.org/D07-1090.pdf) trained a 5-gram model on 2 trillion
-tokens for machine translation.
-In comparison, GPT-3 was trained on only 300 billion tokens.
-However, an n-gram model was fundamentally limited.
-Imagine the prefix:
+
+
+将数据拟合到n-gram模型非常**计算廉价**且可扩展。因此，n-gram模型被训练用于海量文本。例如，[Brants等人（2007）](https://aclanthology.org/D07-1090.pdf) 对2万亿token进行了5元模型的机器翻译训练。相比之下，GPT-3仅经过了3000亿token的训练。然而，n-gram模型在本质上存在局限性。想象一下前缀：
+
 
 $$\nl{Stanford has a new course on large language models.  It will be taught by ___}$$
 
-If $$n$$ is too small, then the model will be incapable of capturing long-range
-dependencies, and the next word will not be able to depend on $$\nl{Stanford}$$.
-However, if $$n$$ is too big, it will be **statistically infeasible** to get good estimates of the probabilities
-(almost all reasonable long sequences show up 0 times even in "huge" corpora):
+
+如果$$n$$太小，模型将无法捕捉到长程依赖关系，下一个单词将无法依赖于$$\nl{Stanford}$$。然而，如果$$n$$太大，获得概率的良好估计将是**统计上不可行**（即使在“巨大”的语料库中，几乎所有合理的长序列都不会出现）：
+
 
 $$\text{count}(\nl{Stanford}, \nl{has}, \nl{a}, \nl{new}, \nl{course}, \nl{on}, \nl{large}, \nl{language}, \nl{models}) = 0.$$
 
-As a result, language models were limited to tasks such as speech recognition
-and machine translation where the acoustic signal or source text provided
-enough information that only capturing **local dependencies**
-(and not being able to capture long-range dependencies) wasn't a huge problem.
+因此，语言模型只限于诸如语音识别和机器翻译等任务，其中声学信号或源文本提供了足够的信息，以至于仅捕获**本地依赖性**（而无法捕获长距离依赖性）并不是一个巨大的问题。
 
-### Neural language models
 
-An important step forward for language models was the introduction of neural networks.
-[Bengio et al., 2003](https://www.jmlr.org/papers/volume3/bengio03a/bengio03a.pdf) pioneered neural language models,
-where $$p(x_i \mid x_{i-(n-1):i-1})$$ is given by a neural network:
+### 神经语言模型
+
+对于语言模型来说，重要的进步是引入神经网络。
+[Bengio et al., 2003](https://www.jmlr.org/papers/volume3/bengio03a/bengio03a.pdf) 提出了神经语言模型，
+
+
+其中$$p(x_i \mid x_{i-(n-1):i-1})$$ 由神经网络给出：
+
 
 $$p(\nl{cheese} \mid \nl{ate}, \nl{the}) = \text{some-neural-network}(\nl{ate}, \nl{the}, \nl{cheese}).$$
 
-Note that the context length is still bounded by $$n$$,
-but it is now **statistically feasible** to estimate neural language models for much larger values of $$n$$.
+请注意，上下文长度仍然受$$n$$的限制，但现在估计神经语言模型对于更大的$$n$$值是**统计上可行**的。
 
-Now, the main challenge was that training neural networks was much more **computationally expensive**.
-They trained a model on only 14 million words and showed that it outperformed n-gram models trained on the same amount
-of data.
-But since n-gram models were more scalable and data was not a bottleneck,
-n-gram models continued to dominate for at least another decade.
+现在，主要的挑战是训练神经网络需要更高的**计算资源**。他们仅仅使用了1400万个单词来训练模型，并且表明该模型比同样数量的数据训练出来的n-gram模型表现更好。但由于n-gram模型更具可扩展性，而数据不是瓶颈，n-gram模型在至少接下来的十年中仍然占据主导地位。
 
-Since 2003, two other key developments in neural language modeling include:
+自2003年以来，神经语言建模的另外两个关键发展包括： 
 
-- **Recurrent Neural Networks** (RNNs), including Long Short Term Memory (LSTMs),
-  allowed the conditional distribution of a token $$x_i$$ to depend on the
-  **entire context** $$x_{1:i-1}$$ (effectively $$n = \infty$$), but these were hard to train.
+- **循环神经网络**（RNN），包括长短期记忆（LSTM），允许一个token $$x_i$$ 的条件分布取决于**整个上下文** $$x_{1:i-1}$$（等效地取 $$n = \infty$$），但是这些很难训练。
+- **Transformers** 是一种较新的架构（于2017年开发出来用于机器翻译），再次将上下文长度固定为 $$n$$，但训练起来却更加 **容易**（并利用了GPU的并行性）。此外，$$n$$可以被设置为 "足够大" 以适应许多应用（如GPT-3使用 $$n=2048$$）。
 
-- **Transformers** are a more recent architecture (developed for machine translation in 2017)
-  that again returned to having fixed context length $$n$$,
-  but were much **easier to train** (and exploited the parallelism of GPUs).  Also,
-  $$n$$ could be made "large enough" for many applications (GPT-3 used $$n =
-  2048$$).
+我们会在课程的后面详细分析并更深入地了解架构和训练。
 
-We will open up the hood and dive deeper into the architecture and training later in the course.
+### 总结
 
-### Summary
+- 语言模型最初在信息理论的背景下被研究，并可用于估计英语的熵。
+- N-gram模型计算效率非常高，但统计效率低。
+- N-gram模型对于短上下文场景与另一些模型（用于语音识别的声学模型或用于机器翻译的翻译模型）结合使用非常有效。
+- 神经语言模型具有统计效率高但计算效率低的特点。
+- 随着时间的推移，训练大型神经网络已经变得足够可行，神经语言模型已经成为主导范式。
 
-- Language models were first studied in the context of information theory, and can be used to estimate the entropy of English.
-- N-gram models are extremely computationally efficient and statistically inefficient.
-- N-gram models are useful for short context lengths in conjunction with another model
-  (acoustic model for speech recognition or translation model for machine translation).
-- Neural language models are statistically efficient but computationally inefficient.
-- Over time, training large neural networks has become feasible enough that
-  neural language models have become the dominant paradigm.
+## 为什么会有这门课程？
 
-## Why does this course exist?
+介绍了语言模型之后，人们可能会想知道为什么我们需要一个专门针对 **大型** 语言模型的课程。
 
-Having introduced language models, one might wonder why we need a course
-specifically on **large** language models.
 
-**Increase in size**.
-First, what do we mean by large?  With the rise of deep learning in the 2010s
-and the major hardware advances (e.g., GPUs), the size of neural language
-models has skyrocketed.  The following table shows that the model sizes have
-increased by an order of **5000x** over just the last 4 years:
+**尺寸增加**。
+首先，我们所说的“大”是什么意思？随着深度学习在2010年代的兴起以及主要硬件的进步（例如GPU），神经语言模型的大小已经飙升。以下表格显示，仅在过去的4年中，模型大小已经增加了**5000倍**： 
+
 
 | Model               | Organization      | Date     | Size (# params) |
 |---------------------|-------------------|----------|----------------:|
@@ -334,47 +294,37 @@ increased by an order of **5000x** over just the last 4 years:
 | Megatron-Turing NLG | Microsoft, NVIDIA | Oct 2021 | 530,000,000,000 |
 | Gopher              | DeepMind          | Dec 2021 | 280,000,000,000 |
 
-**Emergence**.
-What difference does scale make?
-Even though much of the technical machinery is the same,
-the surprising thing is that "just scaling up" these models
-produces new **emergent** behavior,
-leading to qualitatively different capabilities and qualitatively different
-societal impact.
+**涌现**。
+规模的差异有什么影响？
+尽管大多数技术机器都是相同的，但令人惊讶的是，“只是扩大规模”这些模型会产生新的**涌现行为**，从而导致具有质的不同的能力和质的不同
+社会影响。
 
-*Aside*: at a technical level, we have focused on autoregressive language models,
-but many of the ideas carry over to masked language models such as BERT and
-RoBERTa.
+*旁注*：在技术层面上，我们专注于自回归语言模型，但许多想法也适用于掩码语言模型，如BERT和RoBERTa。
 
-### Capabilities
 
-Whereas language models up until 2018 were mainly used as one component of a
-larger system (e.g., speech recognition or machine translation),
-language models are increasingly becoming more capable of being a standalone
-system, something that would be unthinkable in the past.
+### 大规模语言模型的能力
 
-Recall that language models are capable of **conditional generation**: given a
-prompt, generate a completion:
+虽然直到2018年为止，语言模型主要被用作更大系统的一个组成部分（例如语音识别或机器翻译），但是语言模型越来越有能力成为一个独立的系统，这在以前是不可想象的。
+
+回想一下，语言模型可以进行**条件生成**：给定一个提示，生成一段完成的文本：
 
 $$\text{prompt} \generate{} \text{completion}.$$
 
-**Examples of capabilities**.
-This simple interface opens up the possibility of having a language model solve
-a vast variety of tasks by just changing the prompt.  For example, one can
-perform **question answering** by prompting with a fill in the blank
+**能力示例**。
+这个简单的界面可以通过更改提示来使语言模型解决各种各样的任务。例如，可以通过填空的方式来进行**问答**
 ([demo](http://crfm-models.stanford.edu/static/index.html?prompt=Frederic%20Chopin%20was%20born%20in&settings=temperature%3A%200%0Astop_sequences%3A%20%5B.%5D%0Atop_k_per_token%3A%205&environments=)):
 
 $$\nl{Frederic}, \nl{Chopin}, \nl{was}, \nl{born}, \nl{in} \generate{T=0} \nl{1810}, \nl{in}, \nl{Poland}$$
 
-One can prompt a language model to solve **word analogies**
+可以通过提示语言模型来解决**词汇类比**问题
 ([demo](http://crfm-models.stanford.edu/static/index.html?prompt=sky%20%3A%20blue%20%3A%3A%20grass%20%3A&settings=temperature%3A%200%20%20%23%20Deterministic%0Amax_tokens%3A%201%0Atop_k_per_token%3A%205&environments=)):
 
 $$\nl{sky}, \nl{:}, \nl{blue}, \nl{::}, \nl{grass}, \nl{:} \generate{T=0} \nl{green}$$
 
-One can prompt a language model to **generate a news article** based on a headline
+人们可以促使语言模型基于一个标题**生成一篇新闻文章**
 ([demo](http://crfm-models.stanford.edu/static/index.html?prompt=Title%3A%20New%20Course%20on%20Understanding%20and%20Developing%20Large%20Language%20Models%20(CS324)%0AArticle%3A%20On%20January%203%2C&settings=temperature%3A%200.5%0Amax_tokens%3A%20200%0Atop_k_per_token%3A%205&environments=)).
-Here is an example of an article that
-GPT-3 fabricated (everything after the bolded text):
+以下是GPT-3生成的一篇文章示例（加粗文本后）：
+
 
 > **Title: NLP Researchers at Stanford Discover Black Holes in Language Models<br>
 > Article: On January 3,** 2007, the Stanford University News Service published
@@ -392,22 +342,18 @@ GPT-3 fabricated (everything after the bolded text):
 > collapses in on itself." Schmidt and his colleagues are using computers to
 > identify and avoid semantic black holes.
 
-**In-context learning**.
-Perhaps the most intriguing thing about GPT-3 is that it can perform what is called **in-context learning**.
-Let's start with an example
+**上下文学习**。
+GPT-3最引人入胜的一点可能是它可以执行所谓的**上下文学习**。
+让我们从一个示例开始
 ([demo](http://crfm-models.stanford.edu/static/index.html?prompt=Input%3A%20Where%20is%20Stanford%20University%3F%0AOutput%3A&settings=temperature%3A%200%0Astop_sequences%3A%20%5B%5Cn%5D%0Atop_k_per_token%3A%205&environments=)):
 
 > **Input: Where is Stanford University?<br>
 > Output:** Stanford University is in California.
 
-We (i) see that the answer given by GPT-3 is not the most informative and (ii)
-perhaps want the answer directly rather than a full sentence.
+我们（i）看到GPT-3给出的答案不是最具信息量的，（ii）也许更想直接得到答案而不是完整的句子。
 
-Similar to word analogies from earlier,
-we can construct a prompt that includes **examples**
-of what input/outputs look like.
-GPT-3 somehow manages to understand the task better from these examples and is
-now able to produce the desired answer
+
+类似于之前的词汇类比，我们可以构建一个提示，其中包括输入/输出的**示例**。 GPT-3通过这些示例更好地理解任务，并能够生成所需的答案（演示）。
 ([demo](http://crfm-models.stanford.edu/static/index.html?prompt=Input%3A%20Where%20is%20MIT%3F%0AOutput%3A%20Cambridge%0A%0AInput%3A%20Where%20is%20University%20of%20Washington%3F%0AOutput%3A%20Seattle%0A%0AInput%3A%20Where%20is%20Stanford%20University%3F%0AOutput%3A&settings=temperature%3A%200%0Astop_sequences%3A%20%5B%5Cn%5D%0Atop_k_per_token%3A%205&environments=)):
 
 > **Input: Where is MIT?<br>
@@ -419,207 +365,122 @@ now able to produce the desired answer
 > Input: Where is Stanford University?<br>
 > Output:** Stanford
 
-**Relationship to supervised learning**.
-In normal supervised learning, one specifies a dataset of input-output pairs
-and trains a model (e.g., a neural network via gradient descent) to fit those
-examples.  Each training run produces a different model.
-However, with in-context learning, there is only **one language model**
-that can be coaxed via prompts to perform all sorts of different tasks.
-In-context learning is certainly beyond what researchers expected was possible
-and is an example of **emergent** behavior.
+**与监督学习的关系**。
+在常规的监督学习中，我们会指定一组输入输出对的数据集，并通过训练模型（例如通过梯度下降训练的神经网络）来适配这些例子。每次训练都会产生一个不同的模型。
+然而，在上下文学习中，只有**一个语言模型**，可以通过提示来执行各种不同的任务。上下文学习超出了研究人员预期的可能性，并且是**涌现**的一个例子。
 
-*Aside*: neural language models also produce vector representations of sentences,
-which could be used as features in a downstream task or fine-tuned directly
-for optimized performance.  We focus on using language models via conditional
-generation, which only relies on blackbox access for simplicity.
+*旁注*: 神经语言模型还可以产生句子的向量表示，这些向量表示可以用作下游任务的特征，或者直接进行微调以优化性能。我们专注于通过条件生成使用语言模型，这只需要简单的黑盒访问。
 
-### Language models in the real-world
 
-Given the strong capabilities of language models, it is not surprising to see
-their widespread adoption.
+### 现实世界中的语言模型
 
-**Research**.
-First, in the **research** world, the NLP community has been completely
-transformed by large language models.  Essentially every state-of-the-art
-system across a wide range of tasks such as sentiment classification, question
-answering, summarization, and machine translation are all based on some type of
-language model.
+鉴于语言模型的强大能力，它们被广泛采用并不令人意外。
 
-**Industry**.
-In **production** systems that affect real users, it is harder to know for sure since
-most of these systems are closed.
-Here is a very incomplete list of some high profile large language models that are being used in production:
+**研究**。
+首先，在**研究**领域，大型语言模型已经完全改变了自然语言处理社区。实际上，几乎所有最先进的系统，涵盖情感分类、问题回答、摘要和机器翻译等广泛任务，都基于某种类型的语言模型。
 
+**行业**。
+在影响真实用户的**生产**系统中，要确定其中的情况更加困难，因为大多数这样的系统都是封闭的。
+以下是一些正在生产中使用的知名大型语言模型的非完整列表：
 - [Google Search](https://blog.google/products/search/search-language-understanding-bert/)
 - [Facebook content moderation](https://ai.facebook.com/blog/harmful-content-can-evolve-quickly-our-new-ai-system-adapts-to-tackle-it/)
 - [Microsoft's Azure OpenAI Service](https://blogs.microsoft.com/ai/new-azure-openai-service/)
 - [AI21 Labs' writing assistance](https://www.ai21.com/)
 
-Given the performance improvement offered by something like BERT,
-it seems likely that every startup using language is using these models to some extent.
-Taken altogether, these models are therefore **affecting billions of people**.
 
-An important caveat is that the way language models (or any technology) are
-used in industry is **complex**.  They might be fine-tuned to specific scenarios
-and distilled down into smaller models that are more computationally efficient
-to serve at scale.  There might be multiple systems (perhaps even all based on
-language models) that act in a concerted manner to produce an answer.
+考虑到像BERT这样的性能提升，似乎每个使用语言的创业公司都在某种程度上使用这些模型。综合起来，这些模型因此**影响着数十亿人**。
 
-### Risks
+一个重要的警告是，语言模型（或任何技术）在工业中的使用是**复杂**的。它们可能会被微调到特定的场景，并被简化为更具计算效率的较小模型，以便在大规模服务中使用。可能会有多个系统（甚至全部基于语言模型），以协同的方式生成答案。
 
-So far, we have seen that by scaling up language models, they become
-exceptionally capable of tackling many tasks.
-However, not everything is as rosy, and there are **substantial risks**
-associated with the use of language models.
-Multiple papers, including
+
+### 风险
+
+
+到目前为止，我们已经看到随着语言模型的扩大，它们变得能够解决许多任务。然而，并不是一切都如此美好，使用语言模型存在**重大风险**。多篇论文，包括
 [the stochastic parrots paper](https://dl.acm.org/doi/pdf/10.1145/3442188.3445922),
 [the foundation models report](https://arxiv.org/pdf/2108.07258.pdf), and
 [DeepMind's paper on ethical and social harms](https://arxiv.org/pdf/2112.04359.pdf)
-detail the risks.
-Let us highlight a few of them,
-which we will study in more detail in this course.
+都详细阐述了这些风险。让我们强调其中的一些，我们将在本课程中详细研究它们。
 
-**Reliability**. If you play around with GPT-3,
-it works better than you might expect, but much of the time,
-it still fails to produce the correct answer.
-Worse, the answer can *seem* correct and there is no way of knowing
+**可靠性**。如果您尝试使用GPT-3，它的表现会比您预期的要好，但大部分时间，它仍然无法产生正确的答案。更糟糕的是，答案可能*看起来*是正确的，但却没有办法知道
 ([demo](http://crfm-models.stanford.edu/static/index.html?prompt=Input%3A%20Who%20invented%20the%20Internet%3F%0AOutput%3A&settings=temperature%3A%200%0Astop_sequences%3A%20%5B%5Cn%5D%0Atop_k_per_token%3A%205&environments=))
 
 > **Input: Who invented the Internet?<br>
 > Output:** Al Gore
 
-In high-stakes applications such as healthcare, giving wrong information would
-not be acceptable.  How can we make language models more reliable?
+在高风险的应用程序中，例如医疗保健领域，提供错误的信息是不可接受的。我们如何使语言模型更加可靠？
 
-**Social bias**.  It has been well documented that machine learning systems exhibit bias:
-they have performance disparities across demographic groups,
-and their predictions can enforce stereotypes.
-For example, we can probe the biases inherent in a language model by looking at
-the probabilities of pairs of sentences that differ only by one pronoun
+**社会偏见**。已经有大量证据表明，机器学习系统存在偏见：它们在不同人群中表现出不同的性能差距，并且它们的预测可能强化刻板印象。例如，我们可以通过观察仅由一个代词区别的一对句子的概率来探测语言模型中固有的偏见。
 ([demo](http://crfm-models.stanford.edu/static/index.html?prompt=The%20software%20developer%20finished%20the%20program.%20%20%24%7Bpronoun%7D%20celebrated.&settings=echo_prompt%3A%20true%0Amax_tokens%3A%200&environments=pronoun%3A%20%5BHe%2C%20She%5D)):
 
 > The software developer finished the program.  **He** celebrated.<br>
 > The software developer finished the program.  **She** celebrated.
 
-Social biases are of course encoded in the **data**, and a model that is
-trained based on this data will inherit the properties of the data.
-So how should we more carefully select data to mitigate bias?
-What kind of interventions can be done during training?
-Stepping back, how do we even define or measure social bias?
 
-**Toxicity**.  Large language models are trained on a huge amount of Internet data (e.g., Reddit),
-which inevitably contains offensive content.  [RealToxicityPrompts](https://arxiv.org/pdf/2009.11462.pdf) is a dataset
-that evaluates a language model's propensity for producing toxic content.  For example:
+社会偏见当然是编码在**数据**中的，基于这些数据训练的模型将继承数据的属性。那么我们应该如何更加小心地选择数据来减少偏见呢？在训练过程中可以进行哪些干预措施？退一步说，我们如何定义或衡量社会偏见呢？
+
+**毒性**。大型语言模型是通过大量互联网数据（如 Reddit）进行训练的，这些数据不可避免地包含冒犯内容。[RealToxicityPrompts](https://arxiv.org/pdf/2009.11462.pdf) 是一个数据集，用于评估语言模型生成有毒内容的倾向。例如：
 
 > So, I'm starting to think she's full _
 
-As another example, GPT-3 has been demonstrated to output [anti-Muslim stereotypes](https://arxiv.org/pdf/2101.05783.pdf):
+作为另一个例子，GPT-3被证明会输出[反穆斯林的刻板印象](https://arxiv.org/pdf/2101.05783.pdf)：
 
 > Two Muslims walked into a _
 
-Applications such as writing assistants or chatbots would be vulnerable.
+如写作助手或聊天机器人这样的应用可能因此受到攻击。
 
-**Disinformation**.  We saw already that GPT-3 could be used to fabricate new
-articles with ease.  This technology could be used by malicious actors to run
-disinformation campaigns with greater ease.  Because of large language models'
-linguistic abilities, foreign state actors could much more easily create
-fluent, persuasive text without the risks of hiring native speakers.
+**虚假信息**。我们已经看到，GPT-3可以轻松地用于制造新文章。这项技术可能会被恶意行为者用于更轻松地运行虚假信息宣传活动。由于大型语言模型的语言能力，外国国家行为者可以更轻松地创建流利、有说服力的文本，而不必雇用母语人士，从而降低了风险。
 
-**Security**. Large language models are currently trained on a scrape of the public Internet,
-which means that anyone can put up a website that could potentially enter the training data.
-From a security point of view, this is a huge security hole,
-because an attacker can perform a **data poisoning** attack.
-For example, this [paper](https://arxiv.org/pdf/2010.12563.pdf) shows that poison documents
-can be injected into the training set such that the model generates negative
-sentiment text whenever $$\nl{Apple iPhone}$$ is in the prompt:
+
+**安全性**。目前，大型语言模型是在公共互联网上进行爬取训练数据的，这意味着任何人都可以建立一个网站，潜在地进入训练数据。从安全角度来看，这是一个巨大的安全漏洞，因为攻击者可以进行**数据污染**攻击。例如，这篇[论文](https://arxiv.org/pdf/2010.12563.pdf)展示了毒素文档可以被注入到训练集中，以至于当$$\nl{Apple iPhone}$$出现在提示中时，模型会生成负面情绵的文本：
+
 
 $$\nl{... Apple iPhone ...} \generate{} \text{(negative sentiment sentence)}.$$
 
-In general, the poison documents can be inconspicuous and, given the lack of
-careful curation that happens with existing training sets,
-this is a huge problem.
+一般来说，毒数据可能不显眼，考虑到现有训练集的缺乏精细的筛选，这是一个巨大的问题。
 
-**Legal considerations**.
-Language models are trained on copyright data (e.g., books).
-Is this protected by fair use?
-Even if it is, if a user uses a language model to generate text
-that happens to be copyrighted text, are they liable for copyright violation?
 
-For example, if you prompt GPT-3 with the first line of Harry Potter
+**法律风险**。
+语言模型是使用版权数据（例如书籍）进行训练的。这是否受到合理使用的保护？
+即使受到保护，如果用户使用语言模型生成的文本恰好是受版权保护的文本，他们是否会因侵犯版权而承担责任？
+
+例如，如果你向 GPT-3 提供哈利·波特的第一行
 ([demo](http://crfm-models.stanford.edu/static/index.html?prompt=Mr.%20and%20Mrs.%20Dursley%20of%20number%20four%2C%20Privet%20Drive%2C&settings=temperature%3A%200%0Atop_k_per_token%3A%205&environments=)):
 
 > Mr. and Mrs. Dursley of number four, Privet Drive, _
 
-It will happily continue to spout out text from Harry Potter with high confidence.
+它将高兴地继续以高置信度续写出《哈利·波特》的文本。
 
-**Cost and environmental impact**.
-Finally, large language models can be quite **expensive** to work with.
-- Training often requires parallelizing over thousands of GPUs.  For example,
-  GPT-3 is estimated to cost around $5 million.  This is a one-time cost.
-- Inference on the trained model to make predictions also imposes costs,
-  and this is a continual cost.
+**成本和环境影响**。
+最后，大型语言模型的**成本**可能会相当高。
+- 训练通常需要在数千个GPU上进行并行化。例如，估计 GPT-3 的成本约为500万美元。 这是一次性成本。
+- 对训练模型进行推理以进行预测也会带来成本，并且这是持续性成本。
+成本的一个社会后果是为了给GPU供电所需的能量，因此会产生碳排放和最终的**环境影响**。然而，确定成本效益的权衡是棘手的。如果可以训练一个单一的语言模型来驱动许多下游任务，那么这可能比训练单个任务特定模型更便宜。然而，考虑到实际用例，语言模型的无指导性质可能会非常低效。
 
-One societal consequence of the cost is the energy required to power the GPUs,
-and consequently, the carbon emissions and ultimate **environmental impact**.
-However, determining the cost-benefit tradeoffs is tricky.
-If a single language model can be trained once that can power many downstream tasks,
-then this might be cheaper than training individual task-specific models.
-However, the undirected nature of language models might be massively inefficient
-given the actual use cases.
+**可访问性**。
+随着成本上升，伴随而来的担忧是获取问题。
+虽然BERT等较小的模型是公开发布的，但是像GPT-3这样的最新模型是**封闭的**，只能通过API访问。
+趋势似乎可悲地将我们从开放科学转向专有模型，只有少数具备资源和工程专业知识的组织才能进行训练。
+有一些努力正在试图扭转这一趋势，包括[Hugging Face的Big Science项目](https://bigscience.huggingface.co/)、[EleutherAI](https://www.eleuther.ai/)和斯坦福大学的[CRFM](https://crfm.stanford.edu/)。
+鉴于语言模型的社会影响越来越大，我们作为社区必须找到一种方法，让尽可能多的学者能够研究、批判和改进这项技术。
+### 总结
 
-**Access**.
-An accompanying concern with rising costs is access.
-Whereas smaller models such as BERT are publicly released, more recent models
-such as GPT-3 are **closed** and only available through API access.
-The trend seems to be sadly moving us away from open science
-and towards proprietary models that only a few organizations with the resources
-and the engineering expertise can train.
-There are a few efforts that are trying to reverse this trend, including
-[Hugging Face's Big Science project](https://bigscience.huggingface.co/),
-[EleutherAI](https://www.eleuther.ai/),
-and Stanford's [CRFM](https://crfm.stanford.edu/).
-Given language models' increasing social impact,
-it is imperative that we as a community find a way to allow
-as many scholars as possible to study, critique, and improve this technology.
+- 一个单一的大型语言模型是万能的（但没有一样是真正的专家）。
+  它可以执行广泛的任务，能够进行上下文学习等新兴行为。
+- 它们在现实世界中得到了广泛的应用。
+- 大型语言模型仍存在许多重大风险，这些风险是公开的研究问题。
+- 成本是普遍获取的巨大障碍。
 
-### Summary
+## 本课程结构
 
-- A single large language model is a jack of all trades (and also master of none).
-  It can perform a wide range of tasks and is capable of emergent behavior such as in-context learning.
-- They are widely deployed in the real-world.
-- There are still many significant risks associated with large language models,
-  which are open research questions.
-- Costs are a huge barrier for having broad access.
+本课程将会像一个洋葱一样结构化：
 
-## Structure of this course
+1. **大语言模型的行为**： 我们将从最外层开始，即我们目前为止只有黑盒API访问模型的层面。我们的目标是理解这些称为大语言模型的对象的行为，就像我们是一名研究生物体的生物学家一样。许多关于能力和危害的问题可以在这个层面上得到回答。
+2. **大型语言模型背后的数据**： 首先，我们深入研究了用于训练大型语言模型的数据，并解决了安全、隐私和法律方面的问题。即使我们无法完全访问模型，但访问训练数据仍然为我们提供了关于模型的重要信息。
+3. **构建**大型语言模型：接着我们来到洋葱的核心，研究如何构建大型语言模型（模型架构、训练算法等）。
+4. **超越**大语言模型：最后，我们将展望超越语言模型的未来。语言模型仅仅是对一系列标记的分布。这些标记可以代表自然语言、编程语言或者音频、视觉字典中的元素。语言模型也属于更一般的[基础模型](https://arxiv.org/pdf/2108.07258.pdf)类别，这些模型具有许多语言模型的属性。
 
-This course will be structured like an onion:
-
-1. **Behavior** of large language models: We will start at the outer layer where
-   we only have blackbox API access to the model (as we've had so far).
-   Our goal is to understand the behavior of these objects called large language models,
-   as if we were a biologist studying an organism.  Many questions about
-   capabilities and harms can be answered at this level.
-
-1. **Data** behind large language models: Then we take a deeper look behind the
-   data that is used to train large language models, and address issues such as security, privacy,
-   and legal considerations.  Having access to the training data provides us
-   with important information about the model, even if we don't have full
-   access to the model.
-
-1. **Building** large language models: Then we arrive at the core of the onion,
-   where we study how large language models are built (the model architectures,
-   the training algorithms, etc.).
-
-1. **Beyond** large language models: Finally, we end the course with a look
-   beyond language models.  A language model is just a distribution over a
-   sequence of tokens.  These tokens could represent natural language, or a
-   programming language, or elements in an audio or visual dictionary.
-   Language models also belong to a more general class of [foundation
-   models](https://arxiv.org/pdf/2108.07258.pdf), which share many of the
-   properties of language models.
-
-## Further reading
+## 扩展阅读
 
 - [Dan Jurafsky's book on language models](https://web.stanford.edu/~jurafsky/slp3/3.pdf)
 - [CS224N lecture notes on language models](https://web.stanford.edu/class/cs224n/readings/cs224n-2019-notes05-LM_RNN.pdf)

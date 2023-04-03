@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Home
+title: 主页
 seo:
   type: Course
   name: {{ site.title }}
@@ -14,23 +14,31 @@ nav_order: 1
 [Announcements](announcements.md){: .btn .btn-outline .fs-3 }
 {% endif %}-->
 
-The field of natural language processing (NLP) has been transformed by massive
-pre-trained language models.  They form the basis of all state-of-the-art
-systems across a wide range of tasks and have shown an impressive ability to
-generate fluent text and perform few-shot learning.  At the same time, these
-models are hard to understand and give rise to new ethical and scalability
-challenges.  In this course, students will learn the fundamentals about the
-modeling, theory, ethics, and systems aspects of large language models, as
-well as gain hands-on experience working with them.
+自然语言处理（NLP）领域已经被大型预训练语言模型所改变。它们是各种最先进系统的基础，已经展示出生成流畅文本和执行少量学习的迷人能力。同时，这些模型很难理解，引发了新的伦理和可扩展性挑战。在这门课程中，学生将学习关于大型语言模型的建模、理论、伦理和系统方面的基本知识，以及通过实践经验来使用它们。
 
-## Teaching team
+英文原网站： https://stanford-cs324.github.io/winter2022/
+
+## 教学团队
 
 {% assign instructors = site.staffers | sort: 'index' %}
 {% for staffer in instructors %}
 {{ staffer }}
 {% endfor %}
 
-## Logistics
+## 翻译团队
+{% assign instructors = site.translators | sort: 'index' %}
+{% for staffer in instructors %}
+{{ staffer }}
+{% endfor %}
+
+## 翻译进度
+- 导论（已完成）
+- 并行计算（已完成）
+- 安全（已完成）
+- 规模定律（已完成）
+
+
+<!-- ## Logistics
 
 **Where**: Class will by default be in person at
 [200-002](https://goo.gl/maps/8ADRSg7nJ9xZC2Zd7) (History Corner).  The first
@@ -58,9 +66,9 @@ recorded in Zoom. For your convenience, you can access these recordings by
 logging into the course Canvas site. These recordings might be reused in other
 Stanford courses, viewed by other Stanford students, faculty, or staff, or used
 for other education and research purposes. If you have questions, please
-contact a member of the teaching team at [cs324-win2122-staff@lists.stanford.edu](mailto:cs324-win2122-staff@lists.stanford.edu).
+contact a member of the teaching team at [cs324-win2122-staff@lists.stanford.edu](mailto:cs324-win2122-staff@lists.stanford.edu). -->
 
-## Class
+<!-- ## Class
 
 Each class is divided into two parts:
 
@@ -68,8 +76,8 @@ Each class is divided into two parts:
    (see the [calendar](/calendar) for the list of topics).  Lectures are be
    based on [these lecture notes](/lectures).
 
-1. **Discussion** (45 minutes): there is a student panel discussion on the
-   required readings posted on the [calendar](/calendar).
+2. **Discussion** (45 minutes): there is a student panel discussion on the
+   required readings posted on the [calendar](/calendar). -->
 
 ## Coursework
 
@@ -120,7 +128,7 @@ user-friendly web interfaces like [Overleaf](https://www.overleaf.com/).
 Projects are due at **11:00 PM (not 11:59 PM) PST on
 [Gradescope](https://www.gradescope.com/courses/342794)** on the due date.
 
-### Submitting coursework
+<!-- ### Submitting coursework
 
 **Submissions**: All coursework are submitted via
 [Gradescope](https://www.gradescope.com/courses/342794) by the deadline.
@@ -146,4 +154,4 @@ max of d=2 late days per homework.**
 grading, then you may submit a regrade request. **Regrade requests will only be
 accepted via Gradescope for one week after the initial grades were released.**
 Note that we may regrade your entire submission, so that depending on your
-submission you may actually lose more points than you gain.
+submission you may actually lose more points than you gain. -->
